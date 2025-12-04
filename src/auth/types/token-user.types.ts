@@ -1,4 +1,3 @@
-
 export interface FirebaseIdentities {
   email?: string[];
   [key: string]: any; // for other providers like phone, google, etc.
@@ -11,17 +10,17 @@ export interface FirebaseInfo {
 
 export interface DecodedFirebaseToken {
   name?: string;
-  iss: string;               // issuer
-  aud: string;               // audience (project ID)
-  auth_time: number;         // auth time in seconds
-  user_id: string;           // Firebase UID
-  sub: string;               // same as user_id
-  iat: number;               // issued at timestamp
-  exp: number;               // expiration timestamp
+  iss: string; // issuer
+  aud: string; // audience (project ID)
+  auth_time: number; // auth time in seconds
+  uid: string; // Firebase UID
+  sub: string; // same as uid
+  iat: number; // issued at timestamp
+  exp: number; // expiration timestamp
   email?: string;
   email_verified?: boolean;
   firebase: FirebaseInfo;
-  [key: string]: any;        // for any custom claims you add
+  [key: string]: any; // for any custom claims you add
 }
 
 // Admin token payload received from frontend
@@ -43,5 +42,3 @@ export interface ValidatedAdminUser {
   firebaseEmail?: string;
   emailVerified?: boolean;
 }
-
-

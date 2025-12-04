@@ -22,22 +22,31 @@ export class FirebaseService implements OnModuleInit {
       type: this.configService.get<string>('TYPE'),
       project_id: this.configService.get<string>('PROJECT_ID'),
       private_key_id: this.configService.get<string>('PRIVATE_KEY_ID'),
-      private_key: this.configService.get<string>('PRIVATE_KEY')?.replace(/\\n/g, '\n'),
+      private_key: this.configService
+        .get<string>('PRIVATE_KEY')
+        ?.replace(/\\n/g, '\n'),
       client_email: this.configService.get<string>('CLIENT_EMAIL'),
       client_id: this.configService.get<string>('CLIENT_ID'),
       auth_uri: this.configService.get<string>('AUTH_URI'),
       token_uri: this.configService.get<string>('TOKEN_URI'),
-      auth_provider_x509_cert_url: this.configService.get<string>('AUTH_PROVIDER_X509_CERT_URL'),
-      client_x509_cert_url: this.configService.get<string>('CLIENT_X509_CERT_URL'),
+      auth_provider_x509_cert_url: this.configService.get<string>(
+        'AUTH_PROVIDER_X509_CERT_URL',
+      ),
+      client_x509_cert_url: this.configService.get<string>(
+        'CLIENT_X509_CERT_URL',
+      ),
       universe_domain: this.configService.get<string>('UNIVERSE_DOMAIN'),
     };
 
-    const projectId = this.configService.get<string>('FIREBASE_PROJECT_ID') 
-                      || serviceAccount.project_id;
+    const projectId =
+      this.configService.get<string>('FIREBASE_PROJECT_ID') ||
+      serviceAccount.project_id;
 
     try {
       admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount as admin.ServiceAccount),
+        credential: admin.credential.cert(
+          serviceAccount as admin.ServiceAccount,
+        ),
         projectId,
       });
 
