@@ -1,10 +1,21 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { KoreanPapersModule } from './korean-papers/korean-papers.module';
+import { AuthModule } from './auth/auth.module';
+import { FirebaseModule } from './firebase/firebase.module';
+import { UserModule } from './user/user.module';
 
 @Module({
-  imports: [KoreanPapersModule],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
+    }),
+    FirebaseModule,
+    AuthModule,
+    UserModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

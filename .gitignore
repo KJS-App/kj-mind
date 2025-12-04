@@ -42,6 +42,11 @@ lerna-debug.log*
 .env.production.local
 .env.local
 
+# Firebase service account credentials (NEVER commit these)
+firebase-service-account.json
+*-service-account.json
+*.json.bak
+
 # temp directory
 .temp
 .tmp
