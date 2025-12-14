@@ -5,6 +5,7 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { FirebaseModule } from './firebase/firebase.module';
 import { UserModule } from './user/user.module';
+import { VocabularyModule } from './features/vocabulary/vocabulary.module';
 
 @Module({
   imports: [
@@ -15,6 +16,7 @@ import { UserModule } from './user/user.module';
     FirebaseModule,
     AuthModule,
     UserModule,
+    VocabularyModule,
   ],
   controllers: [AppController],
   providers: [AppService],
