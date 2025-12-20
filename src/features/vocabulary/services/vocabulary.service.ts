@@ -19,7 +19,7 @@ export class VocabularyService {
 
       // Get Firestore instance
       const firestore = this.firebaseService.getFirestore();
-      
+
       // Generate a new ID if not provided
       const vocabularyRef = firestore.collection('vocabulary');
       const docRef = vocabularyItem.id
@@ -39,7 +39,9 @@ export class VocabularyService {
 
       await docRef.set(vocabularyData);
 
-      this.logger.log(`Vocabulary item added successfully with ID: ${docRef.id}`);
+      this.logger.log(
+        `Vocabulary item added successfully with ID: ${docRef.id}`,
+      );
 
       return {
         success: true,
