@@ -1,6 +1,8 @@
 import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as admin from 'firebase-admin';
+import * as path from 'path';
+import * as fs from 'fs';
 
 @Injectable()
 export class FirebaseService implements OnModuleInit {
@@ -18,35 +20,29 @@ export class FirebaseService implements OnModuleInit {
       return;
     }
 
-    const serviceAccount = {
-      type: this.configService.get<string>('TYPE'),
-      project_id: this.configService.get<string>('PROJECT_ID'),
-      private_key_id: this.configService.get<string>('PRIVATE_KEY_ID'),
-      private_key: this.configService
-        .get<string>('PRIVATE_KEY')
-        ?.replace(/\\n/g, '\n'),
-      client_email: this.configService.get<string>('CLIENT_EMAIL'),
-      client_id: this.configService.get<string>('CLIENT_ID'),
-      auth_uri: this.configService.get<string>('AUTH_URI'),
-      token_uri: this.configService.get<string>('TOKEN_URI'),
-      auth_provider_x509_cert_url: this.configService.get<string>(
-        'AUTH_PROVIDER_X509_CERT_URL',
-      ),
-      client_x509_cert_url: this.configService.get<string>(
-        'CLIENT_X509_CERT_URL',
-      ),
-      universe_domain: this.configService.get<string>('UNIVERSE_DOMAIN'),
-    };
+    const credentialsPath = this.configService.get<string>('GOOGLE_APPLICATION_CREDENTIALS');
+    
+    if (!credentialsPath) {
+      throw new Error('GOOGLE_APPLICATION_CREDENTIALS environment variable is not set');
+    }
+
+    const resolvedPath = path.resolve(credentialsPath);
+    
+    if (!fs.existsSync(resolvedPath)) {
+      throw new Error(`Firebase service account file not found at: ${resolvedPath}`);
+    }
+
+    const serviceAccount = JSON.parse(
+      fs.readFileSync(resolvedPath, 'utf8'),
+    ) as admin.ServiceAccount;
 
     const projectId =
       this.configService.get<string>('FIREBASE_PROJECT_ID') ||
-      serviceAccount.project_id;
+      serviceAccount.projectId;
 
     try {
       admin.initializeApp({
-        credential: admin.credential.cert(
-          serviceAccount as admin.ServiceAccount,
-        ),
+        credential: admin.credential.cert(serviceAccount),
         projectId,
       });
 
@@ -75,4 +71,8 @@ export class FirebaseService implements OnModuleInit {
 
     return key && value ? { key, value } : null;
   }
+   getFirestore(): admin.firestore.Firestore {
+    return admin.firestore();
+  }
+
 }
