@@ -2,8 +2,8 @@ import { Language, PaperType } from '../enums/paper.enums';
 import { UserType } from 'src/user/enums/user.enums';
 
 interface Discount {
-    userType: UserType;
-    amount: number;
+  userType: UserType;
+  amount: number;
 }
 
 export interface IPastPaper {

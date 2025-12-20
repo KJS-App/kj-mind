@@ -20,16 +20,22 @@ export class FirebaseService implements OnModuleInit {
       return;
     }
 
-    const credentialsPath = this.configService.get<string>('GOOGLE_APPLICATION_CREDENTIALS');
-    
+    const credentialsPath = this.configService.get<string>(
+      'GOOGLE_APPLICATION_CREDENTIALS',
+    );
+
     if (!credentialsPath) {
-      throw new Error('GOOGLE_APPLICATION_CREDENTIALS environment variable is not set');
+      throw new Error(
+        'GOOGLE_APPLICATION_CREDENTIALS environment variable is not set',
+      );
     }
 
     const resolvedPath = path.resolve(credentialsPath);
-    
+
     if (!fs.existsSync(resolvedPath)) {
-      throw new Error(`Firebase service account file not found at: ${resolvedPath}`);
+      throw new Error(
+        `Firebase service account file not found at: ${resolvedPath}`,
+      );
     }
 
     const serviceAccount = JSON.parse(
@@ -71,8 +77,7 @@ export class FirebaseService implements OnModuleInit {
 
     return key && value ? { key, value } : null;
   }
-   getFirestore(): admin.firestore.Firestore {
+  getFirestore(): admin.firestore.Firestore {
     return admin.firestore();
   }
-
 }
