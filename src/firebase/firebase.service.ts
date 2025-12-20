@@ -81,7 +81,4 @@ export class FirebaseService implements OnModuleInit {
 
     return key && value ? { key, value } : null;
   }
-  getFirestore(): admin.firestore.Firestore {
-    return admin.firestore();
-  }
 }
