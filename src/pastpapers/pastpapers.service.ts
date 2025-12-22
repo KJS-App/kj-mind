@@ -6,12 +6,15 @@ import { IPastPaper, PaginatedResponse } from './types/pastpaper.types';
 export class PastpapersService {
   constructor(private readonly firebaseService: FirebaseService) {}
 
-  async addPaper(data: IPastPaper): Promise<string> {
+  async addPaper(data: IPastPaper): Promise<{ message: string; paperId: string }> {
     try {
       const firestore = this.firebaseService.getFirestore();
       const pastpapersCollection = firestore.collection('pastpapers');
       const docRef = await pastpapersCollection.add(data);
-      return `Past paper added with ID: ${docRef.id}`;
+      return {
+        message: 'Past paper added successfully',
+        paperId: docRef.id,
+      };
     } catch (error) {
       console.log('Data received for new past paper:', data);
       console.error('Error adding past paper:', error);
@@ -74,12 +77,15 @@ export class PastpapersService {
     }
   }
 
-  async deletePaper(paperId: string): Promise<string> {
+  async deletePaper(paperId: string): Promise<{ message: string; paperId: string }> {
     try {
       const firestore = this.firebaseService.getFirestore();
       const pastpapersCollection = firestore.collection('pastpapers');
       await pastpapersCollection.doc(paperId).delete();
-      return `Past paper with ID: ${paperId} deleted successfully.`;
+      return {
+        message: 'Past paper deleted successfully',
+        paperId: paperId,
+      };
     } catch (error) {
       console.error('Error deleting past paper:', error);
       throw new Error('Failed to delete past paper');
@@ -89,12 +95,15 @@ export class PastpapersService {
   async updatePaper(
     paperId: string,
     data: Partial<IPastPaper>,
-  ): Promise<string> {
+  ): Promise<{ message: string; paperId: string }> {
     try {
       const firestore = this.firebaseService.getFirestore();
       const pastpapersCollection = firestore.collection('pastpapers');
       await pastpapersCollection.doc(paperId).update(data);
-      return `Past paper with ID: ${paperId} updated successfully.`;
+      return {
+        message: 'Past paper updated successfully',
+        paperId: paperId,
+      };
     } catch (error) {
       console.error('Error updating past paper:', error);
       throw new Error('Failed to update past paper');
