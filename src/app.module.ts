@@ -5,6 +5,9 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { FirebaseModule } from './firebase/firebase.module';
 import { UserModule } from './user/user.module';
+import { CategoryModule } from './category/category.module';
+import { SubcategoryModule } from './subcategory/subcategory.module';
+import { QuestionModule } from './modules/question/question.module';
 
 @Module({
   imports: [
@@ -15,6 +18,9 @@ import { UserModule } from './user/user.module';
     FirebaseModule,
     AuthModule,
     UserModule,
+    CategoryModule,
+    SubcategoryModule,
+    QuestionModule,
   ],
   controllers: [AppController],
   providers: [AppService],
