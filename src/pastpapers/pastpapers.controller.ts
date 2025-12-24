@@ -9,19 +9,20 @@ import {
 } from '@nestjs/common';
 import { PastpapersService } from './pastpapers.service';
 import type { IPastPaper } from './types/pastpaper.types';
-import { RefreshAuthGuard } from 'src/auth/guards/refresh-auth/refresh-auth.guard';
+import { AdminAuthGuard } from 'src/auth/guards/admin-auth/admin-auth.guard';
 
 @Controller('pastpapers')
 export class PastpapersController {
   constructor(private readonly pastpapersService: PastpapersService) {}
 
   @Post('addPaper')
-  async addPaper(@Body() body: IPastPaper): Promise<string> {
+  @UseGuards(AdminAuthGuard)
+  async addPaper(@Body() body: IPastPaper): Promise<{ message: string; paperId: string }> {
     return this.pastpapersService.addPaper(body);
   }
 
   @Get('getPapers')
-  @UseGuards(RefreshAuthGuard)
+  @UseGuards(AdminAuthGuard)
   async getPapers(
     @Query('isPastPaper') isPastPaper?: string,
     @Query('subject') subject?: string,
@@ -51,15 +52,17 @@ export class PastpapersController {
   }
 
   @Delete('deletePaper')
-  async deletePaper(@Query('paperId') paperId: string): Promise<string> {
+  @UseGuards(AdminAuthGuard)
+  async deletePaper(@Query('paperId') paperId: string): Promise<{ message: string; paperId: string }> {
     return this.pastpapersService.deletePaper(paperId);
   }
 
   @Post('updatePaper')
+  @UseGuards(AdminAuthGuard)
   async updatePaper(
     @Query('paperId') paperId: string,
     @Body() body: Partial<IPastPaper>,
-  ): Promise<string> {
+  ): Promise<{ message: string; paperId: string }> {
     return this.pastpapersService.updatePaper(paperId, body);
   }
 }
