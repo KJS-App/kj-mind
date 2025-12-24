@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { CategoryController } from './category.controller';
 import { CategoryService } from './category.service';
-import { FirebaseService } from '../firebase/firebase.service';
+import { FirebaseService } from '../../firebase/firebase.service';
 
 @Module({
   controllers: [CategoryController],

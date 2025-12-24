@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import type { firestore as FirestoreNS } from 'firebase-admin';
-import { FirebaseService } from '../firebase/firebase.service';
+import { FirebaseService } from '../../firebase/firebase.service';
 import { CreateSubcategoryDto } from './dto/create-subcategory.dto';
 import { UpdateSubcategoryDto } from './dto/update-subcategory.dto';
 import { Subcategory } from './subcategory.model';
@@ -19,7 +19,6 @@ export class SubcategoryService implements OnModuleInit {
 
   private getCollection(): FirestoreNS.CollectionReference {
     if (!this.collection) {
-      // Lazy init in case lifecycle order delays assignment
       this.collection = this.firebaseService
         .getFirestore()
         .collection('subcategories');

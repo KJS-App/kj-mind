@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { FirebaseModule } from '../firebase/firebase.module';
+import { FirebaseModule } from '../../firebase/firebase.module';
 import { SubcategoryService } from './subcategory.service';
 import { SubcategoryController } from './subcategory.controller';
 

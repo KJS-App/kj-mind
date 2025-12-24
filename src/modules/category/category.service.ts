@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
 import type { firestore } from 'firebase-admin';
-import { FirebaseService } from '../firebase/firebase.service';
+import { FirebaseService } from '../../firebase/firebase.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { Category } from './category.model';
@@ -17,7 +17,6 @@ export class CategoryService implements OnModuleInit {
 
   private getCollection(): firestore.CollectionReference {
     if (!this.collection) {
-      // Lazy init in case lifecycle order delays assignment
       this.collection = this.firebaseService.getFirestore().collection('categories');
     }
     return this.collection;
