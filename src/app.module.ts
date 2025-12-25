@@ -7,6 +7,7 @@ import { FirebaseModule } from './firebase/firebase.module';
 import { UserModule } from './user/user.module';
 import { PastpapersModule } from './pastpapers/pastpapers.module';
 import { VocabularyModule } from './features/vocabulary/vocabulary.module';
+import { PaymentModule } from './payment/payment.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { VocabularyModule } from './features/vocabulary/vocabulary.module';
     UserModule,
     PastpapersModule,
     VocabularyModule,
+    PaymentModule,
   ],
   controllers: [AppController],
   providers: [AppService],
