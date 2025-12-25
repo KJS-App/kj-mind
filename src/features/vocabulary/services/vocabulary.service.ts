@@ -178,4 +178,54 @@ export class VocabularyService {
       throw error;
     }
   }
+
+  async updateVocabularyItem(
+    vocabularyItem: VocabularyItemDto,
+  ): Promise<{ success: boolean; message: string }> {
+    try {
+      if (!vocabularyItem.category) {
+        throw new Error('Category is required');
+      } else if (!vocabularyItem.id) {
+        throw new Error('Item ID is required');
+      }
+      const firestore = this.firebaseService.getFirestore();
+
+      const itemRef = firestore
+        .collection('vocabulary')
+        .doc(vocabularyItem.category)
+        .collection('items')
+        .doc(vocabularyItem.id);
+
+      const itemDoc = await itemRef.get();
+
+      if (!itemDoc.exists) {
+        throw new Error(
+          `Vocabulary item with ID '${vocabularyItem.id}' does not exist in category '${vocabularyItem.category}'.`,
+        );
+      }
+
+      const updatedDoc = {
+        id: vocabularyItem.id,
+        category: vocabularyItem.category,
+        englishWord: vocabularyItem.englishWord,
+        koreanWord: vocabularyItem.koreanWord,
+        japaneseWord: vocabularyItem.japaneseWord,
+        imageUrl: vocabularyItem.imageUrl,
+        sinhalaWord: vocabularyItem.sinhalaWord,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      };
+
+      await itemRef.set(updatedDoc);
+      this.logger.log(
+        `Vocabulary item with ID '${vocabularyItem.id}' updated successfully in category '${vocabularyItem.category}'`,
+      );
+      return {
+        success: true,
+        message: 'Vocabulary item updated successfully',
+      };
+    } catch (error) {
+      this.logger.error('Error updating vocabulary item:', error);
+      throw error;
+    }
+  }
 }

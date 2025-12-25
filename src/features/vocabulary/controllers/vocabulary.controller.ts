@@ -1,4 +1,11 @@
-import { Controller, Post, UseGuards, Body, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  UseGuards,
+  Body,
+  Delete,
+  Patch,
+} from '@nestjs/common';
 import { AdminAuthGuard } from '../../../auth/guards/admin-auth/admin-auth.guard';
 import type {
   VocabularyItemDeleteDto,
@@ -35,6 +42,13 @@ export class VocabularyController {
     const result = await this.vocabularyService.deleteVocabularyItem(
       vocabularyItemDeleteDto,
     );
+    return result;
+  }
+
+  @Patch('update')
+  async updateVocabularyItem(@Body() vocabularyItem: VocabularyItemDto) {
+    const result =
+      await this.vocabularyService.updateVocabularyItem(vocabularyItem);
     return result;
   }
 }
