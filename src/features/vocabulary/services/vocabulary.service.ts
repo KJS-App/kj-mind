@@ -4,7 +4,6 @@ import {
   VocabularyItemDeleteDto,
   VocabularyItemDto,
 } from '../types/vocabulary.types';
-import { DecodedFirebaseToken } from '../../../auth/types/token-user.types';
 import * as admin from 'firebase-admin';
 
 @Injectable()

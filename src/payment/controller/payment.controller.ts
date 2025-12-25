@@ -1,7 +1,9 @@
-import { Controller, Post, Body, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, Get, Query } from '@nestjs/common';
 import { PayhereService } from '../service/payment.service';
-import { RefreshAuthGuard } from 'src/auth/guards/refresh-auth/refresh-auth.guard';
-
+import type {
+  PaymentOrderDto,
+  ProcessNotificationDto,
+} from '../types/payment.types';
 
 @Controller('payhere')
 export class PayhereController {
@@ -9,9 +11,9 @@ export class PayhereController {
 
   // @UseGuards(RefreshAuthGuard)
   @Post('create-order')
-  async createOrder(@Body() orderData: any) {
+  createOrder(@Body() orderData: PaymentOrderDto) {
     try {
-      const paymentOrder = await this.payhereService.createPaymentOrder({
+      const paymentOrder = this.payhereService.createPaymentOrder({
         userId: orderData.userId,
         orderId: `${orderData.userId}_${Date.now()}`,
         amount: orderData.amount,
@@ -30,26 +32,27 @@ export class PayhereController {
         data: paymentOrder,
       };
     } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
       return {
         success: false,
-        message: error.message,
+        message,
       };
     }
   }
 
-
   @Post('notify')
-  async handleNotification(@Body() data: any) {
+  async handleNotification(@Body() data: ProcessNotificationDto) {
     try {
       const result = await this.payhereService.processPaymentNotification(data);
       return { success: true, data: result };
     } catch (error) {
-      return { success: false, message: error.message };
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      return { success: false, message };
     }
   }
 
   @Get('verify')
-  async verifyPayment(@Query('orderId') orderId: string) {
+  verifyPayment(@Query('orderId') orderId: string) {
     // Implement order verification logic
     return { orderId, status: 'verified' };
   }

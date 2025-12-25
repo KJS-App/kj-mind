@@ -1,23 +1,22 @@
 import { Injectable, HttpException, HttpStatus, Logger } from '@nestjs/common';
-import { HttpService } from '@nestjs/axios';
-import { firstValueFrom } from 'rxjs';
 import * as crypto from 'crypto';
 import { UserService } from '../../user/user.service';
 import { UserType } from '../../user/enums/user.enums';
+import {
+  PaymentOrderDto,
+  PaymentStatus,
+  ProcessNotificationDto,
+} from '../types/payment.types';
 
 @Injectable()
 export class PayhereService {
   private readonly logger = new Logger(PayhereService.name);
   private readonly merchantId = process.env.PAYHERE_MERCHANT_ID || '';
   private readonly merchantSecret = process.env.PAYHERE_MERCHANT_SECRET || '';
-  private readonly baseUrl = process.env.PAYHERE_BASE_URL || ''; // sandbox or live
+  private readonly baseUrl = process.env.PAYHERE_BASE_URL || '';
 
-  constructor(
-    private readonly httpService: HttpService,
-    private readonly userService: UserService,
-  ) {}
+  constructor(private readonly userService: UserService) {}
 
-  // Generate hash for payment
   generateHash(
     orderId: string,
     amount: string,
@@ -42,20 +41,7 @@ export class PayhereService {
     return hash;
   }
 
-  // Create payment order
-  async createPaymentOrder(paymentData: {
-    userId: string;
-    orderId: string;
-    amount: number;
-    itemName: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-    phone: string;
-    address: string;
-    city: string;
-    country: string;
-  }) {
+  createPaymentOrder(paymentData: PaymentOrderDto) {
     const hash = this.generateHash(
       paymentData.orderId,
       paymentData.amount.toString(),
@@ -81,16 +67,7 @@ export class PayhereService {
     };
   }
 
-  verifyNotification(data: any): boolean {
-    const {
-      merchant_id,
-      order_id,
-      payhere_amount,
-      payhere_currency,
-      status_code,
-      md5sig,
-    } = data;
-
+  verifyNotification(data: ProcessNotificationDto): boolean {
     const hashedSecret = crypto
       .createHash('md5')
       .update(this.merchantSecret)
@@ -100,15 +77,15 @@ export class PayhereService {
     const localHash = crypto
       .createHash('md5')
       .update(
-        `${merchant_id}${order_id}${payhere_amount}${payhere_currency}${status_code}${hashedSecret}`,
+        `${data.merchant_id}${data.order_id}${data.payhere_amount}${data.payhere_currency}${data.status_code}${hashedSecret}`,
       )
       .digest('hex')
       .toUpperCase();
 
-    return localHash === md5sig;
+    return localHash === data.md5sig;
   }
 
-  async processPaymentNotification(data: any) {
+  async processPaymentNotification(data: ProcessNotificationDto) {
     const isValid = this.verifyNotification(data);
     if (!isValid) {
       throw new HttpException('Invalid notification', HttpStatus.BAD_REQUEST);
@@ -117,7 +94,7 @@ export class PayhereService {
     const { order_id, status_code, payment_id } = data;
 
     // Extract userId from order_id
-    let userId:string | null = null;
+    let userId: string | null = null;
     if (order_id) {
       const parts = order_id.split('_');
       if (parts.length >= 2) {
@@ -128,12 +105,12 @@ export class PayhereService {
     }
 
     let status = 'pending';
-    if (status_code === '2') status = 'completed';
-    else if (status_code === '-1') status = 'canceled';
-    else if (status_code === '-2') status = 'failed';
-    else if (status_code === '-3') status = 'chargedback';
+    if (status_code === PaymentStatus.SUCCESS) status = 'completed';
+    else if (status_code === PaymentStatus.CANCELED) status = 'canceled';
+    else if (status_code === PaymentStatus.FAILED) status = 'failed';
+    else if (status_code === PaymentStatus.CHARGED_BACK) status = 'chargedback';
 
-    if (status_code === '2' && userId) {
+    if (status_code === PaymentStatus.SUCCESS && userId) {
       try {
         await this.userService.updateUserType(userId, UserType.SILVER);
       } catch (error) {

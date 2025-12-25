@@ -1,7 +1,9 @@
-import { Controller, Post, Request, UseGuards, Body, Delete } from '@nestjs/common';
-import type { DecodedFirebaseToken } from '../../../auth/types/token-user.types';
+import { Controller, Post, UseGuards, Body, Delete } from '@nestjs/common';
 import { AdminAuthGuard } from '../../../auth/guards/admin-auth/admin-auth.guard';
-import type { VocabularyItemDeleteDto, VocabularyItemDto } from '../types/vocabulary.types';
+import type {
+  VocabularyItemDeleteDto,
+  VocabularyItemDto,
+} from '../types/vocabulary.types';
 import { VocabularyService } from '../services/vocabulary.service';
 
 @Controller('vocabulary')
@@ -10,9 +12,7 @@ export class VocabularyController {
 
   @UseGuards(AdminAuthGuard)
   @Post('create-category')
-  async createCategory(
-    @Body() body: { categoryName: string },
-  ) {
+  async createCategory(@Body() body: { categoryName: string }) {
     const result = await this.vocabularyService.createCategory(
       body.categoryName,
     );
@@ -21,12 +21,9 @@ export class VocabularyController {
 
   @UseGuards(AdminAuthGuard)
   @Post('add')
-  async addVocabularyItem(
-    @Body() vocabularyItem: VocabularyItemDto,
-  ) {
-    const result = await this.vocabularyService.addVocabularyItem(
-      vocabularyItem,
-    );
+  async addVocabularyItem(@Body() vocabularyItem: VocabularyItemDto) {
+    const result =
+      await this.vocabularyService.addVocabularyItem(vocabularyItem);
     return result;
   }
 

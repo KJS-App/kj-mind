@@ -10,6 +10,6 @@ export interface VocabularyItemDto {
 }
 
 export interface VocabularyItemDeleteDto {
-  categoryName: string,
-  itemId: string,
+  categoryName: string;
+  itemId: string;
 }
