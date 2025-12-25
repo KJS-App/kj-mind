@@ -1,6 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { FirebaseService } from '../../../firebase/firebase.service';
-import { VocabularyItemDto } from '../types/vocabulary.types';
+import {
+  VocabularyItemDeleteDto,
+  VocabularyItemDto,
+} from '../types/vocabulary.types';
 import { DecodedFirebaseToken } from '../../../auth/types/token-user.types';
 import * as admin from 'firebase-admin';
 
@@ -10,21 +13,78 @@ export class VocabularyService {
 
   constructor(private readonly firebaseService: FirebaseService) {}
 
-  async addVocabularyItem(
-    vocabularyItem: VocabularyItemDto,
-    user: DecodedFirebaseToken,
-  ): Promise<{ success: boolean; id: string; message: string }> {
+  async createCategory(
+    categoryName: string,
+  ): Promise<{ success: boolean; message: string; categoryName: string }> {
     try {
-      this.logger.log(`Adding vocabulary item by user: ${user.uid}`);
-
-      // Get Firestore instance
       const firestore = this.firebaseService.getFirestore();
 
-      // Generate a new ID if not provided
-      const vocabularyRef = firestore.collection('vocabulary');
+      const categoryDocRef = firestore
+        .collection('vocabulary')
+        .doc(categoryName);
+
+      const categoryDoc = await categoryDocRef.get();
+
+      if (categoryDoc.exists) {
+        return {
+          success: false,
+          message: 'Category already exists',
+          categoryName,
+        };
+      }
+
+      await categoryDocRef.set({
+        categoryName: categoryName,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      await categoryDocRef.collection('items').doc('_metadata').set({
+        itemCount: 0,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+
+      this.logger.log(`Category '${categoryName}' created successfully`);
+
+      return {
+        success: true,
+        message: 'Category created successfully',
+        categoryName,
+      };
+    } catch (error) {
+      this.logger.error('Error creating category:', error);
+      throw error;
+    }
+  }
+
+  async addVocabularyItem(
+    vocabularyItem: VocabularyItemDto,
+  ): Promise<{ success: boolean; id: string; message: string }> {
+    try {
+      if (!vocabularyItem.category) {
+        throw new Error('Category is required');
+      }
+
+      const firestore = this.firebaseService.getFirestore();
+
+      const categoryDocRef = firestore
+        .collection('vocabulary')
+        .doc(vocabularyItem.category);
+
+      const categoryDoc = await categoryDocRef.get();
+
+      if (!categoryDoc.exists) {
+        throw new Error(
+          `Category '${vocabularyItem.category}' does not exist. Please create it first.`,
+        );
+      }
+
+      const categoryCollectionRef = categoryDocRef.collection('items');
+
       const docRef = vocabularyItem.id
-        ? vocabularyRef.doc(vocabularyItem.id)
-        : vocabularyRef.doc();
+        ? categoryCollectionRef.doc(vocabularyItem.id)
+        : categoryCollectionRef.doc();
 
       const vocabularyData = {
         id: docRef.id,
@@ -39,8 +99,16 @@ export class VocabularyService {
 
       await docRef.set(vocabularyData);
 
+      await categoryCollectionRef.doc('_metadata').set(
+        {
+          itemCount: admin.firestore.FieldValue.increment(1),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        },
+        { merge: true },
+      );
+
       this.logger.log(
-        `Vocabulary item added successfully with ID: ${docRef.id}`,
+        `Vocabulary item added successfully to category '${vocabularyItem.category}' with ID: ${docRef.id}`,
       );
 
       return {
@@ -50,6 +118,64 @@ export class VocabularyService {
       };
     } catch (error) {
       this.logger.error('Error adding vocabulary item:', error);
+      throw error;
+    }
+  }
+
+  async deleteVocabularyItem(
+    vocabularyItemDeleteDto: VocabularyItemDeleteDto,
+  ): Promise<{ success: boolean; message: string }> {
+    try {
+      if (!vocabularyItemDeleteDto.categoryName) {
+        throw new Error('Category name is required for deletion');
+      }
+
+      if (!vocabularyItemDeleteDto.itemId) {
+        throw new Error('Item ID is required for deletion');
+      }
+
+      if (vocabularyItemDeleteDto.itemId === '_metadata') {
+        throw new Error('Cannot delete metadata document');
+      }
+
+      const firestore = this.firebaseService.getFirestore();
+      const itemRef = firestore
+        .collection('vocabulary')
+        .doc(vocabularyItemDeleteDto.categoryName)
+        .collection('items')
+        .doc(vocabularyItemDeleteDto.itemId);
+
+      const itemDoc = await itemRef.get();
+
+      if (!itemDoc.exists) {
+        return {
+          success: false,
+          message: 'Vocabulary item not found',
+        };
+      }
+
+      await itemRef.delete();
+      const metadataRef = firestore
+        .collection('vocabulary')
+        .doc(vocabularyItemDeleteDto.categoryName)
+        .collection('items')
+        .doc('_metadata');
+      await metadataRef.set(
+        {
+          itemCount: admin.firestore.FieldValue.increment(-1),
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        },
+        { merge: true },
+      );
+      this.logger.log(
+        `Vocabulary item '${vocabularyItemDeleteDto.itemId}' deleted successfully from category '${vocabularyItemDeleteDto.categoryName}'`,
+      );
+      return {
+        success: true,
+        message: 'Vocabulary item deleted successfully',
+      };
+    } catch (error) {
+      this.logger.error('Error deleting vocabulary item:', error);
       throw error;
     }
   }

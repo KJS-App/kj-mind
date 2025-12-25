@@ -8,3 +8,8 @@ export interface VocabularyItemDto {
   sinhalaWord: string;
   createdAt: Date;
 }
+
+export interface VocabularyItemDeleteDto {
+  categoryName: string,
+  itemId: string,
+}
