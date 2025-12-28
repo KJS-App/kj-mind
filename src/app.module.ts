@@ -5,9 +5,9 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { FirebaseModule } from './firebase/firebase.module';
 import { UserModule } from './user/user.module';
-import { CategoryModule } from './modules/category/category.module';
-import { SubcategoryModule } from './modules/subcategory/subcategory.module';
-import { QuestionModule } from './modules/question/question.module';
+import { CategoryModule } from './quiz/quizcategory/category.module';
+import { SubcategoryModule } from './quiz/subcategory/subcategory.module';
+import { QuestionModule } from './quiz/question/question.module';
 
 @Module({
   imports: [
