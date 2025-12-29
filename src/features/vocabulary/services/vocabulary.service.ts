@@ -20,13 +20,17 @@ export class VocabularyService {
       const categories: VocabularyCategoryDto[] = [];
 
       categoriesSnapshot.forEach((doc) => {
-        const data = doc.data();
+        const data = doc.data() as {
+          categoryName: string;
+          createdAt: admin.firestore.Timestamp;
+          updatedAt: admin.firestore.Timestamp;
+        };
         categories.push({
           categoryId: doc.id,
           categoryName: data.categoryName,
-          createdAt: data.createdAt,
-          updatedAt: data.updatedAt,
-        } as VocabularyCategoryDto);
+          createdAt: data.createdAt.toDate(),
+          updatedAt: data.updatedAt.toDate(),
+        });
       });
       return categories;
     } catch (error) {
@@ -194,9 +198,7 @@ export class VocabularyService {
       }
 
       await itemRef.delete();
-      const metadataRef = categoryDoc.ref
-        .collection('items')
-        .doc('_metadata');
+      const metadataRef = categoryDoc.ref.collection('items').doc('_metadata');
       await metadataRef.set(
         {
           itemCount: admin.firestore.FieldValue.increment(-1),
