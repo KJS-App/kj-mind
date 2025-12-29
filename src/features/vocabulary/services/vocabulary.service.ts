@@ -280,4 +280,45 @@ export class VocabularyService {
       throw error;
     }
   }
+
+
+  async getVocabularyItems(categoryName: string): Promise<VocabularyItemDto[]> {
+  try {
+    if (!categoryName) {
+      throw new Error('Category name is required');
+    }
+
+    const firestore = this.firebaseService.getFirestore();
+
+    const categoryQuery = await firestore
+      .collection('vocabulary')
+      .where('categoryName', '==', categoryName)
+      .limit(1)
+      .get();
+
+    if (categoryQuery.empty) {
+      throw new Error(`Category '${categoryName}' does not exist.`);
+    }
+
+    const categoryDoc = categoryQuery.docs[0];
+    const itemsSnapshot = await categoryDoc.ref
+      .collection('items')
+      .where(admin.firestore.FieldPath.documentId(), '!=', '_metadata')
+      .get();
+
+    const items: VocabularyItemDto[] = [];
+    itemsSnapshot.forEach((doc) => {
+      const data = doc.data() as VocabularyItemDto;
+      items.push({
+        ...data,
+        id: doc.id,
+      });
+    });
+
+    return items;
+  } catch (error) {
+    this.logger.error('Error getting vocabulary items:', error);
+    throw error;
+  }
+}
 }

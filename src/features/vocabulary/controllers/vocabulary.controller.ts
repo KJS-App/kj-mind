@@ -28,6 +28,14 @@ export class VocabularyController {
   }
 
   @UseGuards(AdminAuthGuard)
+  @Get('items')
+  async getVocabularyItems(@Query('categoryName') categoryName: string) {
+    const result =
+      await this.vocabularyService.getVocabularyItems(categoryName);
+    return result;
+  }
+
+  @UseGuards(AdminAuthGuard)
   @Post('create-category')
   async createCategory(@Query('categoryName') categoryName: string) {
     const result = await this.vocabularyService.createCategory(categoryName);
@@ -53,6 +61,7 @@ export class VocabularyController {
     return result;
   }
 
+  @UseGuards(AdminAuthGuard)
   @Patch('update')
   async updateVocabularyItem(@Body() vocabularyItem: VocabularyItemDto) {
     const result =
