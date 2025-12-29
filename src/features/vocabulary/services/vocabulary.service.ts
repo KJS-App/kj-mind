@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { FirebaseService } from '../../../firebase/firebase.service';
 import {
+  VocabularyCategoryDto,
   VocabularyItemDeleteDto,
   VocabularyItemDto,
 } from '../types/vocabulary.types';
@@ -12,19 +13,40 @@ export class VocabularyService {
 
   constructor(private readonly firebaseService: FirebaseService) {}
 
+  async getCategories(): Promise<VocabularyCategoryDto[]> {
+    try {
+      const firestore = this.firebaseService.getFirestore();
+      const categoriesSnapshot = await firestore.collection('vocabulary').get();
+      const categories: VocabularyCategoryDto[] = [];
+
+      categoriesSnapshot.forEach((doc) => {
+        const data = doc.data();
+        categories.push({
+          categoryId: doc.id,
+          categoryName: data.categoryName,
+          createdAt: data.createdAt,
+          updatedAt: data.updatedAt,
+        } as VocabularyCategoryDto);
+      });
+      return categories;
+    } catch (error) {
+      this.logger.error('Error getting categories:', error);
+      throw error;
+    }
+  }
   async createCategory(
     categoryName: string,
   ): Promise<{ success: boolean; message: string; categoryName: string }> {
     try {
       const firestore = this.firebaseService.getFirestore();
 
-      const categoryDocRef = firestore
+      const existingCategory = await firestore
         .collection('vocabulary')
-        .doc(categoryName);
+        .where('categoryName', '==', categoryName)
+        .limit(1)
+        .get();
 
-      const categoryDoc = await categoryDocRef.get();
-
-      if (categoryDoc.exists) {
+      if (!existingCategory.empty) {
         return {
           success: false,
           message: 'Category already exists',
@@ -32,8 +54,10 @@ export class VocabularyService {
         };
       }
 
+      const categoryDocRef = firestore.collection('vocabulary').doc();
+
       await categoryDocRef.set({
-        categoryName: categoryName,
+        categoryName,
         createdAt: admin.firestore.FieldValue.serverTimestamp(),
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       });
@@ -67,17 +91,21 @@ export class VocabularyService {
 
       const firestore = this.firebaseService.getFirestore();
 
-      const categoryDocRef = firestore
+      // Find category by categoryName
+      const categoryQuery = await firestore
         .collection('vocabulary')
-        .doc(vocabularyItem.category);
+        .where('categoryName', '==', vocabularyItem.category)
+        .limit(1)
+        .get();
 
-      const categoryDoc = await categoryDocRef.get();
-
-      if (!categoryDoc.exists) {
+      if (categoryQuery.empty) {
         throw new Error(
           `Category '${vocabularyItem.category}' does not exist. Please create it first.`,
         );
       }
+
+      const categoryDoc = categoryQuery.docs[0];
+      const categoryDocRef = categoryDoc.ref;
 
       const categoryCollectionRef = categoryDocRef.collection('items');
 
@@ -138,9 +166,21 @@ export class VocabularyService {
       }
 
       const firestore = this.firebaseService.getFirestore();
-      const itemRef = firestore
+
+      const categoryQuery = await firestore
         .collection('vocabulary')
-        .doc(vocabularyItemDeleteDto.categoryName)
+        .where('categoryName', '==', vocabularyItemDeleteDto.categoryName)
+        .limit(1)
+        .get();
+
+      if (categoryQuery.empty) {
+        throw new Error(
+          `Category '${vocabularyItemDeleteDto.categoryName}' does not exist.`,
+        );
+      }
+
+      const categoryDoc = categoryQuery.docs[0];
+      const itemRef = categoryDoc.ref
         .collection('items')
         .doc(vocabularyItemDeleteDto.itemId);
 
@@ -154,9 +194,7 @@ export class VocabularyService {
       }
 
       await itemRef.delete();
-      const metadataRef = firestore
-        .collection('vocabulary')
-        .doc(vocabularyItemDeleteDto.categoryName)
+      const metadataRef = categoryDoc.ref
         .collection('items')
         .doc('_metadata');
       await metadataRef.set(
@@ -190,9 +228,21 @@ export class VocabularyService {
       }
       const firestore = this.firebaseService.getFirestore();
 
-      const itemRef = firestore
+      // Find category by categoryName
+      const categoryQuery = await firestore
         .collection('vocabulary')
-        .doc(vocabularyItem.category)
+        .where('categoryName', '==', vocabularyItem.category)
+        .limit(1)
+        .get();
+
+      if (categoryQuery.empty) {
+        throw new Error(
+          `Category '${vocabularyItem.category}' does not exist.`,
+        );
+      }
+
+      const categoryDoc = categoryQuery.docs[0];
+      const itemRef = categoryDoc.ref
         .collection('items')
         .doc(vocabularyItem.id);
 

@@ -9,6 +9,11 @@ export interface VocabularyItemDto {
   createdAt: Date;
 }
 
+export interface VocabularyCategoryDto {
+  categoryName: string;
+  categoryId: string;
+}
+
 export interface VocabularyItemDeleteDto {
   categoryName: string;
   itemId: string;
