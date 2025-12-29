@@ -1,15 +1,18 @@
 import {
+  Get,
   Controller,
   Post,
   UseGuards,
   Body,
   Delete,
   Patch,
+  Query,
 } from '@nestjs/common';
 import { AdminAuthGuard } from '../../../auth/guards/admin-auth/admin-auth.guard';
 import type {
-  VocabularyItemDeleteDto,
+  VocabularyCategoryDto,
   VocabularyItemDto,
+  VocabularyItemDeleteDto,
 } from '../types/vocabulary.types';
 import { VocabularyService } from '../services/vocabulary.service';
 
@@ -18,11 +21,24 @@ export class VocabularyController {
   constructor(private readonly vocabularyService: VocabularyService) {}
 
   @UseGuards(AdminAuthGuard)
+  @Get('categories')
+  async getCategories(): Promise<VocabularyCategoryDto[]> {
+    const categories = await this.vocabularyService.getCategories();
+    return categories;
+  }
+
+  @UseGuards(AdminAuthGuard)
+  @Get('items')
+  async getVocabularyItems(@Query('categoryName') categoryName: string) {
+    const result =
+      await this.vocabularyService.getVocabularyItems(categoryName);
+    return result;
+  }
+
+  @UseGuards(AdminAuthGuard)
   @Post('create-category')
-  async createCategory(@Body() body: { categoryName: string }) {
-    const result = await this.vocabularyService.createCategory(
-      body.categoryName,
-    );
+  async createCategory(@Query('categoryName') categoryName: string) {
+    const result = await this.vocabularyService.createCategory(categoryName);
     return result;
   }
 
@@ -34,7 +50,7 @@ export class VocabularyController {
     return result;
   }
 
-  // @UseGuards(AdminAuthGuard)
+  @UseGuards(AdminAuthGuard)
   @Delete('delete')
   async deleteVocabularyItem(
     @Body() vocabularyItemDeleteDto: VocabularyItemDeleteDto,
@@ -45,6 +61,7 @@ export class VocabularyController {
     return result;
   }
 
+  @UseGuards(AdminAuthGuard)
   @Patch('update')
   async updateVocabularyItem(@Body() vocabularyItem: VocabularyItemDto) {
     const result =
