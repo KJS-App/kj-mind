@@ -53,9 +53,7 @@ export class QuestionService {
   }
 
   async remove(subCategoryId: string, questionId: string) {
-    await this.questionCollection(subCategoryId)
-      .doc(questionId)
-      .delete();
+    await this.questionCollection(subCategoryId).doc(questionId).delete();
     return { message: 'Question deleted successfully' };
   }
 }

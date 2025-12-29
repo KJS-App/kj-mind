@@ -28,12 +28,20 @@ export class SubcategoryService implements OnModuleInit {
 
   async findAll(): Promise<Subcategory[]> {
     const snapshot = await this.getCollection().get();
-    return snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as Subcategory[];
+    return snapshot.docs.map((d) => ({
+      id: d.id,
+      ...d.data(),
+    })) as Subcategory[];
   }
 
   async findByCategory(categoryId: string): Promise<Subcategory[]> {
-    const snapshot = await this.getCollection().where('categoryId', '==', categoryId).get();
-    return snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as Subcategory[];
+    const snapshot = await this.getCollection()
+      .where('categoryId', '==', categoryId)
+      .get();
+    return snapshot.docs.map((d) => ({
+      id: d.id,
+      ...d.data(),
+    })) as Subcategory[];
   }
 
   async findOne(id: string): Promise<Subcategory> {

@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+  OnModuleInit,
+} from '@nestjs/common';
 import type { firestore } from 'firebase-admin';
 import { FirebaseService } from '../../firebase/firebase.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
@@ -12,19 +17,23 @@ export class CategoryService implements OnModuleInit {
   constructor(private readonly firebaseService: FirebaseService) {}
 
   onModuleInit(): void {
-    this.collection = this.firebaseService.getFirestore().collection('categories');
+    this.collection = this.firebaseService
+      .getFirestore()
+      .collection('categories');
   }
 
   private getCollection(): firestore.CollectionReference {
     if (!this.collection) {
-      this.collection = this.firebaseService.getFirestore().collection('categories');
+      this.collection = this.firebaseService
+        .getFirestore()
+        .collection('categories');
     }
     return this.collection;
   }
 
   async findAll(): Promise<Category[]> {
     const snapshot = await this.getCollection().get();
-    return snapshot.docs.map(d => ({ id: d.id, ...d.data() })) as Category[];
+    return snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as Category[];
   }
 
   async findOne(id: string): Promise<Category> {
