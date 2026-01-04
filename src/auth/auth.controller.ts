@@ -20,4 +20,9 @@ export class AuthController {
       message: `Hello, this is the test endpoint that is protected for user ${req.user.name}`,
     };
   }
+
+  @Get('public')
+  publicEndpoint() {
+    return { message: 'Hello, this is a public endpoint' };
+  }
 }
