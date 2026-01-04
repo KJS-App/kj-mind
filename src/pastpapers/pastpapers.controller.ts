@@ -22,7 +22,7 @@ export class PastpapersController {
   }
 
   @Get('getPapers')
-  @UseGuards(AdminAuthGuard)
+  // @UseGuards(AdminAuthGuard)
   async getPapers(
     @Query('isPastPaper') isPastPaper?: string,
     @Query('subject') subject?: string,
