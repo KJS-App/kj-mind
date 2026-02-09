@@ -7,15 +7,18 @@ import type {
 
 @Controller('payhere')
 export class PayhereController {
-  constructor(private readonly payhereService: PayhereService) {}
+  constructor(private readonly payhereService: PayhereService) { }
 
   // @UseGuards(RefreshAuthGuard)
   @Post('create-order')
   createOrder(@Body() orderData: PaymentOrderDto) {
     try {
+      // Use a shorter Order ID to prevent truncation issues (max 20-30 chars safe zone)
+      const shortOrderId = `ORD-${Date.now()}`; 
+      
       const paymentOrder = this.payhereService.createPaymentOrder({
         userId: orderData.userId,
-        orderId: `${orderData.userId}_${Date.now()}`,
+        orderId: shortOrderId, // Was: `${orderData.userId}-${Date.now()}`
         amount: orderData.amount,
         itemName: orderData.itemName,
         firstName: orderData.firstName,
@@ -25,6 +28,8 @@ export class PayhereController {
         address: orderData.address,
         city: orderData.city,
         country: orderData.country,
+        planType: orderData.planType,
+        planId: orderData.planId,
       });
 
       return {

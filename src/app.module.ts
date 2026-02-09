@@ -8,6 +8,7 @@ import { UserModule } from './user/user.module';
 import { PastpapersModule } from './pastpapers/pastpapers.module';
 import { VocabularyModule } from './features/vocabulary/vocabulary.module';
 import { PaymentModule } from './payment/payment.module';
+import { SubscriptionModule } from './subscription/subscription.module';
 
 @Module({
   imports: [
@@ -21,8 +22,9 @@ import { PaymentModule } from './payment/payment.module';
     PastpapersModule,
     VocabularyModule,
     PaymentModule,
+    SubscriptionModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

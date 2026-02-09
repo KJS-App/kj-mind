@@ -1,4 +1,4 @@
-import { Controller, Get, Request, UseGuards } from '@nestjs/common';
+import { Controller, Get, Request, UseGuards, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RefreshAuthGuard } from './guards/refresh-auth/refresh-auth.guard';
 import { DecodedFirebaseToken } from './types/token-user.types';
@@ -6,7 +6,7 @@ import { AdminAuthGuard } from './guards/admin-auth/admin-auth.guard';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   @UseGuards(RefreshAuthGuard)
   @Get('login')
@@ -19,5 +19,12 @@ export class AuthController {
     return {
       message: `Hello, this is the test endpoint that is protected for user ${req.user.name}`,
     };
+  }
+
+  @UseGuards(RefreshAuthGuard)
+  @Post('sso-token')
+  async getSsoToken(@Request() req: { user: DecodedFirebaseToken }) {
+    const token = await this.authService.generateSsoToken(req.user.uid);
+    return { token };
   }
 }

@@ -10,6 +10,8 @@ export interface PaymentOrderDto {
   address: string;
   city: string;
   country: string;
+  planType: string;
+  planId: string;
 }
 
 export interface PaymentNotificationDto {

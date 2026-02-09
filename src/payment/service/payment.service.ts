@@ -15,25 +15,28 @@ export class PayhereService {
   private readonly merchantSecret = process.env.PAYHERE_MERCHANT_SECRET || '';
   private readonly baseUrl = process.env.PAYHERE_BASE_URL || '';
 
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService) { }
 
   generateHash(
     orderId: string,
     amount: string,
     currency: string = 'LKR',
   ): string {
+    const merchantId = this.merchantId.trim();
+    const merchantSecret = this.merchantSecret.trim();
+
     const hashedSecret = crypto
       .createHash('md5')
-      .update(this.merchantSecret)
+      .update(merchantSecret)
       .digest('hex')
       .toUpperCase();
 
-    const amountFormatted = parseFloat(amount).toFixed(2).replace(/\./, '');
+    const amountFormatted = parseFloat(amount).toFixed(2);
 
     const hash = crypto
       .createHash('md5')
       .update(
-        `${this.merchantId}${orderId}${amountFormatted}${currency}${hashedSecret}`,
+        `${merchantId}${orderId}${amountFormatted}${currency}${hashedSecret}`,
       )
       .digest('hex')
       .toUpperCase();
@@ -47,23 +50,27 @@ export class PayhereService {
       paymentData.amount.toString(),
     );
 
+    // Ideally return_url and cancel_url should point to the frontend (kj-shepherd), not API_URL
+    // For now, ensuring we use parameters if provided or fallback
     return {
-      merchantId: this.merchantId,
-      orderId: paymentData.orderId,
-      amount: paymentData.amount.toFixed(2),
+      merchant_id: this.merchantId.trim(),
+      return_url: `http://localhost:3000/payment/return`, // Updated to point to frontend
+      cancel_url: `http://localhost:3000/payment/cancel`, // Updated to point to frontend
+      notify_url: `${process.env.API_URL}/payhere/notify`,
+      order_id: paymentData.orderId,
+      items: paymentData.itemName,
       currency: 'LKR',
-      hash: hash,
-      itemName: paymentData.itemName,
-      firstName: paymentData.firstName,
-      lastName: paymentData.lastName,
+      amount: paymentData.amount.toFixed(2),
+      first_name: paymentData.firstName,
+      last_name: paymentData.lastName,
       email: paymentData.email,
       phone: paymentData.phone,
       address: paymentData.address,
       city: paymentData.city,
       country: paymentData.country,
-      returnUrl: `${process.env.API_URL}/payment/return`,
-      cancelUrl: `${process.env.API_URL}/payment/cancel`,
-      notifyUrl: `${process.env.API_URL}/payhere/notify`,
+      hash: hash,
+      custom_1: paymentData.planType,
+      custom_2: paymentData.planId,
     };
   }
 
@@ -96,7 +103,7 @@ export class PayhereService {
     // Extract userId from order_id
     let userId: string | null = null;
     if (order_id) {
-      const parts = order_id.split('_');
+      const parts = order_id.split('-');
       if (parts.length >= 2) {
         userId = parts[0];
       }
@@ -112,7 +119,15 @@ export class PayhereService {
 
     if (status_code === PaymentStatus.SUCCESS && userId) {
       try {
-        await this.userService.updateUserType(userId, UserType.SILVER);
+        const planType = data.custom_1 as UserType;
+        if (
+          [UserType.SILVER, UserType.GOLD, UserType.PLATINUM].includes(planType)
+        ) {
+          await this.userService.updateUserType(userId, planType);
+        } else {
+          this.logger.warn(`Invalid plan type in custom_1: ${data.custom_1}`);
+          await this.userService.updateUserType(userId, UserType.SILVER); // fallback or just log? Let's fallback for safety if something weird happens but normally shouldn't. Actually maybe safe to just fail? No, user paid. Let's give Silver at least.
+        }
       } catch (error) {
         this.logger.error(error);
       }
